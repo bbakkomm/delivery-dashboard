@@ -1,0 +1,123 @@
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  font-family:
+    Inter, Pretendard, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    Arial, sans-serif;
+
+  --bg: #e8f8fd;
+  --bg-gradient-start: #f5fbff;
+  --bg-gradient-end: #d7f3fa;
+  --surface: #ffffff;
+  --surface-soft: #f6fbfd;
+  --surface-muted: #edf7fa;
+  --line: #d8e7ec;
+  --line-strong: #b7d0d8;
+  --text: #0d2230;
+  --text-soft: #263a45;
+  --muted: #647781;
+  --muted-foreground: #647781;
+  --inverse: #ffffff;
+
+  --teal: #087487;
+  --teal-dark: #055d70;
+  --blue: #1d8fb8;
+
+  --ready: #6f8da0;
+  --transit: #087487;
+  --done: #1f9d73;
+  --delay: #d96f22;
+  --return: #7357b8;
+  --danger: #c94d3f;
+
+  --ready-soft: #edf4f7;
+  --transit-soft: #e1f4f8;
+  --done-soft: #e8f7f0;
+  --delay-soft: #fff4e8;
+  --return-soft: #f0ecfb;
+  --danger-soft: #fff0ee;
+
+  --highlight: #fff2a8;
+  --focus-ring: 0 0 0 3px rgb(8 116 135 / 0.16);
+  --shadow-panel: 0 24px 70px rgb(2 52 68 / 0.16);
+  --shadow-card: 0 14px 36px rgb(2 52 68 / 0.08);
+  --shadow-card-active: 0 18px 44px rgb(8 116 135 / 0.2);
+
+  --radius-control: 8px;
+  --radius-card: 8px;
+  --radius-panel: 18px;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg: #071b24;
+  --bg-gradient-start: #0c2632;
+  --bg-gradient-end: #06151d;
+  --surface: #0f2630;
+  --surface-soft: #132f3b;
+  --surface-muted: #173743;
+  --line: #284956;
+  --line-strong: #3a6270;
+  --text: #e8f5f8;
+  --text-soft: #c6dce4;
+  --muted: #91a9b3;
+  --muted-foreground: #91a9b3;
+  --inverse: #071b24;
+
+  --teal: #23a9bd;
+  --teal-dark: #7dd8e5;
+  --blue: #4db6d6;
+
+  --ready: #91aabd;
+  --transit: #23a9bd;
+  --done: #45bf8c;
+  --delay: #f09945;
+  --return: #9b83dc;
+  --danger: #f07869;
+
+  --ready-soft: #182d38;
+  --transit-soft: #12343d;
+  --done-soft: #12352a;
+  --delay-soft: #3b2818;
+  --return-soft: #2a2440;
+  --danger-soft: #3b2220;
+
+  --highlight: #6a5918;
+  --focus-ring: 0 0 0 3px rgb(35 169 189 / 0.22);
+  --shadow-panel: 0 24px 70px rgb(0 0 0 / 0.42);
+  --shadow-card: 0 14px 36px rgb(0 0 0 / 0.26);
+  --shadow-card-active: 0 18px 44px rgb(35 169 189 / 0.18);
+}
+
+@theme inline {
+  --font-sans: Inter, Pretendard, "Segoe UI", system-ui, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-muted: var(--surface-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-text-soft: var(--text-soft);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-inverse: var(--inverse);
+  --color-teal: var(--teal);
+  --color-teal-dark: var(--teal-dark);
+  --color-blue: var(--blue);
+  --color-ready: var(--ready);
+  --color-transit: var(--transit);
+  --color-done: var(--done);
+  --color-delay: var(--delay);
+  --color-return: var(--return);
+  --color-danger: var(--danger);
+
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-panel: var(--radius-panel);
+  --shadow-panel: var(--shadow-panel);
+  --shadow-card: var(--shadow-card);
+}

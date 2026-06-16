@@ -1,0 +1,53 @@
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    background: var(--bg);
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: clip;
+    background:
+      radial-gradient(circle at 80% 16%, rgb(255 255 255 / 0.58), transparent 28%),
+      linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg) 48%, var(--bg-gradient-end) 100%);
+    color: var(--text);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--teal) 22%, transparent);
+  }
+
+  :focus-visible {
+    outline: 0;
+    box-shadow: var(--focus-ring);
+  }
+}

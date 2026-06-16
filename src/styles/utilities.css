@@ -1,0 +1,45 @@
+@layer utilities {
+  .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .interactive-ring {
+    transition:
+      box-shadow 160ms ease,
+      border-color 160ms ease;
+  }
+
+  .interactive-ring:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .scrollbar-thin {
+    scrollbar-color: var(--line-strong) transparent;
+    scrollbar-width: thin;
+  }
+
+  .search-highlight {
+    border-radius: 3px;
+    background: var(--highlight);
+    color: var(--text);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
