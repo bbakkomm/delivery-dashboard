@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Panel } from "@/components/ui";
 import type { DeliveryOrder } from "../types";
 import { DeliveryStatusBadge } from "./delivery-status-badge";
@@ -6,7 +7,8 @@ type SelectedDetailPanelProps = {
   order?: DeliveryOrder;
 };
 
-export function SelectedDetailPanel({ order }: SelectedDetailPanelProps) {
+// 상세 UI는 선택 주문에만 의존하므로 관련 없는 대시보드 상태 렌더를 건너뜁니다.
+export const SelectedDetailPanel = memo(function SelectedDetailPanel({ order }: SelectedDetailPanelProps) {
   if (!order) {
     return (
       <aside className="detail-sidebar max-xl:hidden">
@@ -64,7 +66,7 @@ export function SelectedDetailPanel({ order }: SelectedDetailPanelProps) {
       </Panel>
     </aside>
   );
-}
+});
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (

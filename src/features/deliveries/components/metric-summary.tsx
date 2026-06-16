@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { MetricCard } from "@/components/ui";
 
 type MetricSummaryProps = {
@@ -9,7 +10,8 @@ type MetricSummaryProps = {
   };
 };
 
-export function MetricSummary({ counts }: MetricSummaryProps) {
+// 메트릭 카드는 집계 로드 후 정적이므로 검색/필터/카드 선택 렌더를 건너뜁니다.
+export const MetricSummary = memo(function MetricSummary({ counts }: MetricSummaryProps) {
   return (
     <div className="metric-summary-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard
@@ -38,4 +40,4 @@ export function MetricSummary({ counts }: MetricSummaryProps) {
       />
     </div>
   );
-}
+});

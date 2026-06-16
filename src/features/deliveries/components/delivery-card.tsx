@@ -1,3 +1,4 @@
+import { memo, useCallback, useMemo } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui";
 import { DELIVERY_STATUS_CONFIG } from "../constants";
@@ -12,9 +13,12 @@ type DeliveryCardProps = {
   selected?: boolean;
 };
 
-export function DeliveryCard({ order, onSelect, searchQuery = "", selected = false }: DeliveryCardProps) {
+// 메모된 카드는 주문, 선택 상태, 검색 하이라이트 입력이 바뀔 때만 부모 렌더에 반응합니다.
+export const DeliveryCard = memo(function DeliveryCard({ order, onSelect, searchQuery = "", selected = false }: DeliveryCardProps) {
   const statusConfig = DELIVERY_STATUS_CONFIG[order.status];
-  const handleSelect = () => onSelect(order.id);
+  const handleSelect = useCallback(() => {
+    onSelect(order.id);
+  }, [onSelect, order.id]);
 
   return (
     <article
@@ -70,7 +74,7 @@ export function DeliveryCard({ order, onSelect, searchQuery = "", selected = fal
       </div>
     </article>
   );
-}
+});
 
 function Field({ label, query, title, value }: { label: string; query: string; title?: string; value: string }) {
   return (
@@ -84,44 +88,53 @@ function Field({ label, query, title, value }: { label: string; query: string; t
 }
 
 function HighlightedText({ query, text }: { query: string; text: string }) {
-  const normalizedQuery = query.trim();
+  // 하이라이트 분리는 보이는 필드마다 실행되므로 같은 검색어/문자열 조합은 캐시합니다.
+  const parts = useMemo(() => {
+    const normalizedQuery = query.trim();
 
-  if (!normalizedQuery) {
-    return text;
-  }
+    if (!normalizedQuery) {
+      return null;
+    }
 
-  const lowerText = text.toLowerCase();
-  const lowerQuery = normalizedQuery.toLowerCase();
-  const parts: Array<{ highlighted: boolean; value: string }> = [];
-  let cursor = 0;
-  let matchIndex = lowerText.indexOf(lowerQuery);
+    const lowerText = text.toLowerCase();
+    const lowerQuery = normalizedQuery.toLowerCase();
+    const highlightParts: Array<{ highlighted: boolean; value: string }> = [];
+    let cursor = 0;
+    let matchIndex = lowerText.indexOf(lowerQuery);
 
-  while (matchIndex !== -1) {
-    if (matchIndex > cursor) {
-      parts.push({
+    while (matchIndex !== -1) {
+      if (matchIndex > cursor) {
+        highlightParts.push({
+          highlighted: false,
+          value: text.slice(cursor, matchIndex),
+        });
+      }
+
+      const matchEnd = matchIndex + normalizedQuery.length;
+      highlightParts.push({
+        highlighted: true,
+        value: text.slice(matchIndex, matchEnd),
+      });
+      cursor = matchEnd;
+      matchIndex = lowerText.indexOf(lowerQuery, cursor);
+    }
+
+    if (!highlightParts.length) {
+      return null;
+    }
+
+    if (cursor < text.length) {
+      highlightParts.push({
         highlighted: false,
-        value: text.slice(cursor, matchIndex),
+        value: text.slice(cursor),
       });
     }
 
-    const matchEnd = matchIndex + normalizedQuery.length;
-    parts.push({
-      highlighted: true,
-      value: text.slice(matchIndex, matchEnd),
-    });
-    cursor = matchEnd;
-    matchIndex = lowerText.indexOf(lowerQuery, cursor);
-  }
+    return highlightParts;
+  }, [query, text]);
 
-  if (!parts.length) {
+  if (!parts) {
     return text;
-  }
-
-  if (cursor < text.length) {
-    parts.push({
-      highlighted: false,
-      value: text.slice(cursor),
-    });
   }
 
   return (

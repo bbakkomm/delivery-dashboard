@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { DeliveryOrder } from "../types";
@@ -8,7 +9,8 @@ type MobileDetailSheetProps = {
   order?: DeliveryOrder;
 };
 
-export function MobileDetailSheet({ onClose, order }: MobileDetailSheetProps) {
+// 모바일 시트는 주문이나 닫기 핸들러가 바뀔 때만 다시 렌더링합니다.
+export const MobileDetailSheet = memo(function MobileDetailSheet({ onClose, order }: MobileDetailSheetProps) {
   if (!order) {
     return null;
   }
@@ -48,7 +50,7 @@ export function MobileDetailSheet({ onClose, order }: MobileDetailSheetProps) {
       </div>
     </div>
   );
-}
+});
 
 function Info({ label, value }: { label: string; value: string }) {
   return (

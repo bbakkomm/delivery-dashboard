@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { ArrowUp, CalendarDays, ClipboardList, Download, FileText, History, LayoutDashboard, Package, Plus, Search, X } from "lucide-react";
 import { Button, Input, Skeleton, SkeletonGroup } from "@/components/ui";
-import { fetchDeliveryOrderById, fetchDeliveryOrders } from "../api";
+import { fetchDeliveryOrders } from "../api";
 import type { DeliveryFilterStatus, DeliveryMetricCounts, DeliveryOrder } from "../types";
-import { filterDeliveryOrders } from "../utils";
+import { buildDeliverySearchIndex, filterDeliverySearchIndex } from "../utils";
 import { DeliveryCard } from "./delivery-card";
 import { DeliveryCardSkeleton } from "./delivery-card-skeleton";
 import { MetricSummary } from "./metric-summary";
@@ -56,12 +56,12 @@ export function DeliveryDashboard() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>("do-0414");
-  const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | undefined>();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [skeletonCardCount, setSkeletonCardCount] = useState(getSkeletonCardCount);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
   const [controlsStuck, setControlsStuck] = useState(false);
   const controlsSentinelRef = useRef<HTMLDivElement | null>(null);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   useEffect(() => {
     let isActive = true;
@@ -84,29 +84,6 @@ export function DeliveryDashboard() {
       isActive = false;
     };
   }, []);
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function loadSelectedOrder() {
-      if (!selectedDeliveryId) {
-        setSelectedOrder(undefined);
-        return;
-      }
-
-      const order = await fetchDeliveryOrderById(selectedDeliveryId);
-
-      if (isActive) {
-        setSelectedOrder(order);
-      }
-    }
-
-    void loadSelectedOrder();
-
-    return () => {
-      isActive = false;
-    };
-  }, [selectedDeliveryId]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -157,6 +134,7 @@ export function DeliveryDashboard() {
     };
   }, []);
 
+  // 안정적인 핸들러 참조로 부모 UI 상태만 바뀔 때 카드와 상세 영역의 재렌더를 줄입니다.
   const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
     setVisibleCount(INITIAL_VISIBLE_COUNT);
@@ -175,6 +153,11 @@ export function DeliveryDashboard() {
     setVisibleCount((count) => count + LOAD_MORE_COUNT);
   }, []);
 
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+  }, []);
+
   const handleReset = useCallback(() => {
     setActiveStatusFilter("all");
     setSearchQuery("");
@@ -189,7 +172,16 @@ export function DeliveryDashboard() {
     });
   }, []);
 
-  const filteredDeliveryOrders = useMemo(() => filterDeliveryOrders(allDeliveryOrders, activeStatusFilter, searchQuery), [activeStatusFilter, allDeliveryOrders, searchQuery]);
+  const handleCloseDetail = useCallback(() => {
+    setSelectedDeliveryId(null);
+  }, []);
+
+  // 선택 주문은 로드된 목록에서 파생해 카드 선택 시 추가 비동기 렌더 없이 상세를 갱신합니다.
+  const selectedOrder = useMemo(() => allDeliveryOrders.find((order) => order.id === selectedDeliveryId), [allDeliveryOrders, selectedDeliveryId]);
+  // 검색 문자열은 데이터 로드마다 한 번만 만들어 500건 이상 검색에서도 인덱스를 재사용합니다.
+  const deliverySearchIndex = useMemo(() => buildDeliverySearchIndex(allDeliveryOrders), [allDeliveryOrders]);
+  // 필터링은 지연된 검색어를 따라가게 해 큰 목록을 갱신하는 동안 입력 반응성을 유지합니다.
+  const filteredDeliveryOrders = useMemo(() => filterDeliverySearchIndex(deliverySearchIndex, activeStatusFilter, deferredSearchQuery), [activeStatusFilter, deferredSearchQuery, deliverySearchIndex]);
   const deliveryOrders = useMemo(() => filteredDeliveryOrders.slice(0, visibleCount), [filteredDeliveryOrders, visibleCount]);
   const deliveryTotal = filteredDeliveryOrders.length;
   const hasMore = deliveryOrders.length < deliveryTotal;
@@ -245,10 +237,7 @@ export function DeliveryDashboard() {
                 <button
                   aria-label="Clear search"
                   className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full bg-surface-muted text-muted"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setVisibleCount(INITIAL_VISIBLE_COUNT);
-                  }}
+                  onClick={handleClearSearch}
                   type="button"
                 >
                   <X aria-hidden="true" className="size-4" />
@@ -272,7 +261,7 @@ export function DeliveryDashboard() {
           ) : (
             <div className="delivery-card-grid mt-3 grid gap-3">
               {deliveryOrders.map((order) => (
-                <DeliveryCard key={order.id} onSelect={handleSelectDelivery} order={order} searchQuery={searchQuery} selected={selectedDeliveryId === order.id} />
+                <DeliveryCard key={order.id} onSelect={handleSelectDelivery} order={order} searchQuery={deferredSearchQuery} selected={selectedDeliveryId === order.id} />
               ))}
             </div>
           )}
@@ -301,23 +290,25 @@ export function DeliveryDashboard() {
         <SelectedDetailPanel order={selectedOrder} />
       </div>
 
-      <MobileDetailSheet onClose={() => setSelectedDeliveryId(null)} order={selectedOrder} />
+      <MobileDetailSheet onClose={handleCloseDetail} order={selectedOrder} />
 
       {showScrollTop ? <Button aria-label="Scroll to top" className="scroll-top-button size-11 min-h-11 rounded-full p-0 shadow-panel" data-has-mobile-sheet={Boolean(selectedOrder)} icon={<ArrowUp aria-hidden="true" className="size-5" />} onClick={handleScrollTop} variant="primary" /> : null}
     </div>
   );
 }
 
-function BrandMark({ variant = "sidebar" }: { variant?: "mobile" | "sidebar" }) {
+// 내비게이션 브랜딩은 정적이므로 배송 목록 상태 변경에 따른 재렌더에서 분리합니다.
+const BrandMark = memo(function BrandMark({ variant = "sidebar" }: { variant?: "mobile" | "sidebar" }) {
   return (
     <div className={variant === "mobile" ? "mobile-nav-brand flex items-center gap-3 font-black text-text" : "mb-8 flex items-center gap-3 font-black text-text"}>
       <span className="grid size-8 place-items-center rounded-[8px] bg-teal text-sm text-white">OQ</span>
       OMNIQ OPS
     </div>
   );
-}
+});
 
-function DashboardNav({ variant }: { variant: "mobile" | "sidebar" }) {
+// 내비게이션 항목은 모듈 상수라 memo로 카드/검색/필터 기반 부모 렌더를 건너뜁니다.
+const DashboardNav = memo(function DashboardNav({ variant }: { variant: "mobile" | "sidebar" }) {
   const isMobile = variant === "mobile";
 
   return (
@@ -334,4 +325,4 @@ function DashboardNav({ variant }: { variant: "mobile" | "sidebar" }) {
       })}
     </nav>
   );
-}
+});
