@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { ArrowUp, CalendarDays, ClipboardList, Download, FileText, History, LayoutDashboard, Package, Plus, Search, X } from "lucide-react";
 import { Button, Input, Skeleton, SkeletonGroup } from "@/components/ui";
@@ -37,7 +37,7 @@ function getSkeletonCardCount() {
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Package, label: "Delivery" },
+  { icon: Package, label: "Delivery Order" },
   { icon: CalendarDays, label: "Schedule" },
   { icon: ClipboardList, label: "Manifest" },
   { icon: History, label: "History" },
@@ -60,6 +60,8 @@ export function DeliveryDashboard() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [skeletonCardCount, setSkeletonCardCount] = useState(getSkeletonCardCount);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const [controlsStuck, setControlsStuck] = useState(false);
+  const controlsSentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -129,6 +131,29 @@ export function DeliveryDashboard() {
 
     return () => {
       window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    const sentinel = controlsSentinelRef.current;
+
+    if (!sentinel || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setControlsStuck(!entry.isIntersecting);
+      },
+      {
+        threshold: 0,
+      },
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
     };
   }, []);
 
@@ -210,7 +235,8 @@ export function DeliveryDashboard() {
             <MetricSummary counts={metricCounts} />
           )}
 
-          <div className="dashboard-controls mt-4">
+          <div aria-hidden="true" className="dashboard-controls-sentinel" ref={controlsSentinelRef} />
+          <div className="dashboard-controls mt-4" data-stuck={controlsStuck ? "true" : undefined}>
             <label className="relative flex-1">
               <span className="sr-only">Search deliveries</span>
               <Search aria-hidden="true" className="absolute left-3 top-1/2 hidden size-4 -translate-y-1/2 text-muted" />
