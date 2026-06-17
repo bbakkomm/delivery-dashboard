@@ -12,8 +12,8 @@ import { MobileDetailSheet } from "./mobile-detail-sheet";
 import { SelectedDetailPanel } from "./selected-detail-panel";
 import { StatusFilter } from "./status-filter";
 
-const INITIAL_VISIBLE_COUNT = 30;
-const LOAD_MORE_COUNT = 30;
+const INITIAL_VISIBLE_COUNT = 5;
+const LOAD_MORE_COUNT = 5;
 
 function getSkeletonCardCount() {
   if (typeof window === "undefined") {
@@ -178,7 +178,7 @@ export function DeliveryDashboard() {
 
   // 선택 주문은 로드된 목록에서 파생해 카드 선택 시 추가 비동기 렌더 없이 상세를 갱신합니다.
   const selectedOrder = useMemo(() => allDeliveryOrders.find((order) => order.id === selectedDeliveryId), [allDeliveryOrders, selectedDeliveryId]);
-  // 검색 문자열은 데이터 로드마다 한 번만 만들어 500건 이상 검색에서도 인덱스를 재사용합니다.
+  // 검색 문자열은 데이터 로드마다 한 번만 만들어 필터와 검색에서 같은 인덱스를 재사용합니다.
   const deliverySearchIndex = useMemo(() => buildDeliverySearchIndex(allDeliveryOrders), [allDeliveryOrders]);
   // 필터링은 지연된 검색어를 따라가게 해 큰 목록을 갱신하는 동안 입력 반응성을 유지합니다.
   const filteredDeliveryOrders = useMemo(() => filterDeliverySearchIndex(deliverySearchIndex, activeStatusFilter, deferredSearchQuery), [activeStatusFilter, deferredSearchQuery, deliverySearchIndex]);

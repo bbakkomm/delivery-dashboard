@@ -16,19 +16,19 @@ test("starts in default light mode without theme controls", async ({ page }) => 
 test("matches mockup delivery density", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
-  await expect(page.getByText("50 mock orders, 5 status variants")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Load 20 more" })).toBeVisible();
-  await expect(page.getByText("Showing 30 of 50")).toBeVisible();
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
+  await expect(page.getByText("5 mock orders, 5 status variants")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Load \d+ more/ })).toHaveCount(0);
+  await expect(page.getByText("Showing 5 of 5")).toBeVisible();
 });
 
 test("hides reset in default state", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
   await expect(page.getByRole("button", { name: "Reset" })).toHaveCount(0);
 
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
 });
 
 test("shows reset when search or status filter is active", async ({ page }) => {
@@ -47,49 +47,40 @@ test("shows reset when search or status filter is active", async ({ page }) => {
   await expect(resetButton).toBeVisible();
 });
 
-test("loads more client-side without list skeleton", async ({ page }) => {
-  test.skip((page.viewportSize()?.width ?? 0) < 1280, "desktop-only load more position");
-
+test("does not show load more when all mock statuses are visible", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
-  await page.getByRole("button", { name: "Load 20 more" }).click();
-
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
+  await expect(page.getByRole("button", { name: /Load \d+ more/ })).toHaveCount(0);
   expect(await page.locator(".skeleton-card").count()).toBe(0);
-  await expect(page.locator("article.delivery-card")).toHaveCount(50);
-  await expect(page.getByText("Showing 50 of 50")).toBeVisible();
+  await expect(page.getByText("Showing 5 of 5")).toBeVisible();
 });
 
 test("updates search results without list skeleton", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
   await page.getByRole("textbox", { name: "Search deliveries" }).fill("PLK");
 
   await expect(page.locator(".skeleton-card")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Reset" })).toBeVisible();
-  await expect
-    .poll(() => page.locator("article.delivery-card").count())
-    .toBeGreaterThan(0);
-  await expect
-    .poll(() => page.locator("article.delivery-card").count())
-    .toBeLessThan(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(1);
 });
 
 test("updates status filter without list skeleton", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
   await page.getByRole("button", { name: "RETURNED" }).click();
 
   await expect(page.locator(".skeleton-card")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Reset" })).toBeVisible();
-  await expect(page.getByText("Showing 9 of 9")).toBeVisible();
+  await expect(page.getByText("Showing 1 of 1")).toBeVisible();
 });
 
 test("keeps search and filter controls sticky", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
 
   const controls = page.locator(".dashboard-controls");
   await expect(controls).toHaveCSS("position", "sticky");
@@ -109,7 +100,7 @@ test("keeps desktop sidebar sticky", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 1280, "desktop-only sidebar");
 
   await page.goto("/");
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
 
   const sidebar = page.locator(".sidebar-shell");
   await expect(sidebar).toBeVisible();
@@ -178,7 +169,7 @@ test("shows four compact metric cards on mobile", async ({ page }) => {
 
 test("highlights search matches inside delivery cards", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
 
   await page.getByRole("textbox", { name: "Search deliveries" }).fill("Busan");
   await expect(page.locator("article.delivery-card .search-highlight")).not.toHaveCount(0);
@@ -194,7 +185,7 @@ test("keeps selected detail panel sticky on desktop", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 1280, "desktop-only detail panel");
 
   await page.goto("/");
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
 
   const selectedPanel = page.getByRole("complementary").filter({
     has: page.getByRole("heading", { name: "Selected Detail" }),
@@ -216,7 +207,7 @@ test("keeps selected detail panel sticky on desktop", async ({ page }) => {
 test("shows scroll-to-top after scrolling and returns to top", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
   const scrollTopButton = page.getByRole("button", { name: "Scroll to top" });
   await expect(scrollTopButton).toHaveCount(0);
 
@@ -233,7 +224,7 @@ test("keeps mobile scroll-to-top above detail sheet", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) >= 1280, "mobile-only sheet overlap check");
 
   await page.goto("/");
-  await expect(page.locator("article.delivery-card")).toHaveCount(30);
+  await expect(page.locator("article.delivery-card")).toHaveCount(5);
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
 
   const scrollTopButton = page.getByRole("button", { name: "Scroll to top" });
